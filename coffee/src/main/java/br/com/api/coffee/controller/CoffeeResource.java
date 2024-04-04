@@ -6,6 +6,7 @@ import java.util.List;
 
 import br.com.api.coffee.model.Coffee;
 import br.com.api.coffee.repository.CoffeeRepository;
+import br.com.api.coffee.service.CoffeeService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -38,7 +39,7 @@ public class CoffeeResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response save (@Valid Coffee cafe) {
 		
-		Coffee resp = CoffeeRepository.save(cafe);
+		Coffee resp = CoffeeService.save(cafe);
 		final URI coffeeURI = UriBuilder.fromResource(CoffeeResource.class)
 				.path("/coffee/{id}")
 				.build(resp.getId());
@@ -68,11 +69,8 @@ public class CoffeeResource {
 	@GET
 	@Path("/{id}")
 	public Response findById(@PathParam("id") Long cafeId) {
-		Coffee cafe = CoffeeRepository.findById(cafeId);
-		
-		if(cafe != null) {
+		if(CoffeeService.delete(cafeId)) {
 			 ResponseBuilder response = Response.ok();
-			 response.entity(cafe);
 			 return response.build();
 		}else {
 			ResponseBuilder response = Response.status(404);
@@ -83,26 +81,7 @@ public class CoffeeResource {
 	@PUT
 	@Path("/{id}")
 	public Response update(@PathParam("id") Long id,@Valid Coffee cafe) {
-		Coffee source = CoffeeRepository.findById(id);
-		Coffee target = null;
-		
-		
-		if(source == null || source.getId() != cafe.getId()) {
-			target = CoffeeRepository.save(cafe);
-			
-			final URI coffeeURI = UriBuilder.fromResource(CoffeeResource.class)
-					.path("/coffee/{id}")
-					.build(target.getId());
-			
-			
-			ResponseBuilder response = Response.created(coffeeURI);
-			response.entity(target);
-			
-			return response.build();
-		}
-		
-		target = CoffeeRepository.update(cafe);
-		
-		return Response.ok(target).build();
+		Coffee target = CoffeeService.update(id, cafe);
+		return Response.ok().build();
 	}
 }
